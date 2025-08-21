@@ -1,190 +1,80 @@
 import React, { useEffect, useState } from 'react';
-import ReactDOMServer from "react-dom/server";
 import PropTypes from 'prop-types';
-import localforage from 'localforage';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
-import {
-    AgendaLivePreview,
-    PreviewIn,
-    AgendaHeader,
-    TMILogo,
-    AgendaSideBar,
-    AgendaList,
-    Ballots,
-    ClubName,
-    AgendaItem,
-    AgendaItemTitle,
-    DFlex,
-    ClubTitle,
-    ClubNumber,
-    ClubMeetingDate,
-    ClubMeetingTheme,
-    TMInternational,
-    Main,
-    AgendaActionButtons,
-    Button,
-    Field,
-    Textarea,
-    SaveDataWrap,
-    AgendaTitle,
-    AgendaTM,
-    AgendaContent,
-    LoaderIndicator,
-} from './style';
+import styled from 'styled-components';
+import ReactMarkdown from 'react-markdown';
+import matter from 'gray-matter';
+
+// Styled Components (unchanged)
+const AgendaLivePreview = styled.div`...`; // Keep all your existing styled components here
+const PreviewIn = styled.div`...`;
+const AgendaHeader = styled.div`...`;
+const TMILogo = styled.div`...`;
+const AgendaSideBar = styled.div`...`;
+const AgendaList = styled.div`...`;
+const Ballots = styled.div`...`;
+const ClubName = styled.div`...`;
+const AgendaItem = styled.div`...`;
+const AgendaItemTitle = styled.div`...`;
+const DFlex = styled.div`...`;
+const ClubTitle = styled.div`...`;
+const ClubNumber = styled.div`...`;
+const ClubMeetingDate = styled.div`...`;
+const ClubMeetingTheme = styled.div`...`;
+const TMInternational = styled.div`...`;
+const Main = styled.main`...`;
+const AgendaActionButtons = styled.div`...`;
+const Button = styled.button`...`;
+const Field = styled.input`...`;
+const Textarea = styled.textarea`...`;
+const SaveDataWrap = styled.div`...`;
+const AgendaTitle = styled.h4`...`;
+const AgendaTM = styled.span`...`;
+const AgendaContent = styled.div`...`;
+const LoaderIndicator = styled.span`...`;
+const Title = styled.h1`...`;
 
 import logo from '../toastmasters-logo.png';
-import SimpleMDE from 'react-simplemde-editor';
-import ReactMarkdown from 'react-markdown';
-import 'easymde/dist/easymde.min.css';
-import club_data from '../data/founders/club';
-import agenda_data from '../data/founders/agenda_20';
 
-function MeetingAgendaPreview ({ className }) {
+function MeetingAgendaPreview({ className }) {
 
-    const [ loading, setLoading ] = useState(false);
-    const [ tab, setTab ] = useState('write');
-    // Executive Team
-    const [ meetingBasic, setmeetingBasic ] = useState(club_data);
-    // Agenda Object
-    const [ meetingAgenda, setMeetingAgenda ] = useState(agenda_data);
+    const [loading, setLoading] = useState(true);
+    const [meeting, setMeeting] = useState({});
+    const [content, setContent] = useState('');
 
-    // Add New MeetingAgenda Item
-    const addNewAgenda = () => {
-        setMeetingAgenda([
-            ...meetingAgenda, {
-            id: meetingAgenda.length + 1,
-            title: '',
-            toastmaster: '',
-            startAt: '',
-            details: '' }
-        ]);
-    };
-
-    // Update MeetingBasicInfo data on Change
-    const updateMeetingBasicInfo = (e) => {
-        let name = e.target.name;
-        let value = e.target.value;
-        setmeetingBasic({ ...meetingBasic, [name] : value });
-    }
-
-    const noBorder = (element) => {
-        // const checkarr = ['master', 'speakers', 'evaluations', 'Evaluator'];
-        const newarr = element.value.toLowerCase().split(' ');
-        if(newarr.indexOf('master') === -1 && newarr.indexOf('speakers') === -1 && newarr.indexOf('evaluations') === -1 && newarr.indexOf('evaluator') === -1) {
-            element.parentNode.parentNode.nextSibling.classList.add('no-border');
-        }
-    }
-    // Update MeetingAgenda data on Change
-    const updateMeetingAgenda = (e, id) => {
-        let newMeetingAgenda = [];
-        if( typeof e === 'string') {
-            newMeetingAgenda = meetingAgenda.map(agenda => {
-                if (parseInt(agenda.id, 10) !== id) return agenda;
-                return { ...agenda, 'details': e };
-            });
-        } else {
-            newMeetingAgenda = meetingAgenda.map(agenda => {
-            if (parseInt(agenda.id, 10) !== id) return agenda;
-            noBorder(e.target);
-            return { ...agenda, [ e.target.name ]: e.target.value };
-          });
-        }
-        setMeetingAgenda(newMeetingAgenda);
-    }
-
-
-    // Remove Current MeetingAgenda Item
-    const removeAgenda = (e, id) => {
-        const newMeetingAgenda = meetingAgenda.filter((agenda) => agenda.id !== id);
-        const message = window.confirm(`Do you want to delete Agenda agenda #${ id } ?`);
-        if (message === true) {
-            setMeetingAgenda(newMeetingAgenda);
-        }
-        return false;
-    }
-    
-    // Save MeetingBasicInfo data on LocalStorage
-    const saveData = (e) => {
-        setLoading(true);
-        localforage.setItem('meeting', meetingBasic).then((value) => {
-            console.log('Successfully Saved');
-        }).catch(function(err) { console.log(err) });
-        localforage.setItem('agenda', meetingAgenda).then((value) => {
-            console.log('Successfully Saved');
-        }).catch(function(err) { console.log(err) });
-
-        // Hide Loader
-        setTimeout(() => {
-            setLoading(false)
-        }, 1500)
-        e.preventDefault();
-    }
-
-    // Fetch MeetingBasicInfo data
     useEffect(() => {
-        localforage.config({
-            name: 'zm-offline'
-        });
-        // Meeting Basic Information
-        localforage.getItem('meeting', function(err, value) {
-          if (value !== null ) setmeetingBasic(value)
-        });
-        localforage.getItem('agenda', function(err, value) {
-          if (value !== null ) setMeetingAgenda(value)
-        });
-        setTimeout(() => {
-            document.querySelectorAll('h4 input').forEach(element => {
-                noBorder(element);
-            })
-        }, 1500);
-        return;
-    }, []);  
+        const fetchAgenda = async () => {
+            try {
+                const res = await fetch('/agendas/weekly-agenda.md');
+                const text = await res.text();
+                const { data, content } = matter(text);
+                setMeeting(data);
+                setContent(content);
+                setLoading(false);
+            } catch (err) {
+                console.error("Failed to fetch agenda:", err);
+                setLoading(false);
+            }
+        };
 
-    const disableInputs = (elements, check) => {
-        let length = elements.length;
-        while(length--) {
-            elements[length].disabled = check;
-        }
-    }
-
-    const checkPreview = () => {
-        setTab('preview');
-        disableInputs(document.querySelectorAll('.form-item'), true);
-    };
-    const checkWrite = () => {
-        setTab('write')
-        disableInputs(document.querySelectorAll('.form-item'), false);
-    };
-    const getInstance = instance => {
-        instance.togglePreview();
-        setTimeout(() => {
-            document.querySelectorAll('h4 input').forEach(element => {
-                noBorder(element);
-            })
-        }, 500);
-
-    };
+        fetchAgenda();
+    }, []);
 
     const printMyAgenda = () => {
         window.print();
+    };
+
+    if (loading) {
+        return <Main><LoaderIndicator className="fa fa-spinner fa-spin" /></Main>;
     }
-    
+
     return (
         <Main>
             <SaveDataWrap id="a-buttons" className="buttons">
                 <Button className="bg-primary btn-outline btn-print" onClick={printMyAgenda}>
                     <span>Print</span>
                 </Button>
-                <Button className="btn-save btn-outline" onClick={saveData} type="button">
-                    <span>Save Agenda</span>
-                </Button>
-                <Button className="btn-warning btn-outline" type="button" onClick={tab === 'preview' ? checkWrite : checkPreview}>
-                    <span>{tab === 'preview' ? 'edit' : 'Preview'}</span>
-                </Button>
-                {loading && <LoaderIndicator className="fa fa-spinner fa-spin" />}
             </SaveDataWrap>
-            <AgendaLivePreview className={ `${ className } print-preview` }>
+            <AgendaLivePreview className={`${className} print-preview`}>
                 <PreviewIn>
                     <AgendaHeader>
                         <hr className="border-header"></hr>
@@ -192,202 +82,30 @@ function MeetingAgendaPreview ({ className }) {
                         <hr className="border-white"></hr>
                         <hr className="border-light"></hr>
                         <TMILogo>
-                            <img src={ logo } className="App-logo" alt="logo" />
+                            <img src={logo} className="App-logo" alt="logo" />
                         </TMILogo>
                     </AgendaHeader>
                     <AgendaList>
                         <ClubName>
                             <DFlex>
                                 <ClubTitle>
-                                    <span>{meetingBasic.clubName || `Club Name`}</span>
-                                    <Field type="text" autoComplete="off" name="clubName" onChange={updateMeetingBasicInfo} value={meetingBasic.clubName} placeholder="Club Name" />
+                                    <Title>{meeting.title}</Title>
                                 </ClubTitle>
-                                <ClubNumber>
-                                    <span>{meetingBasic.clubNumber || `Club Number`}</span>
-                                    <Field type="text" autoComplete="off" name="clubNumber" onChange={updateMeetingBasicInfo} value={meetingBasic.clubNumber} placeholder="Club Number" />
-                                </ClubNumber>
                             </DFlex>
-                            <ClubMeetingDate>
-                            <Field
-                                type="text"
-                                autoComplete="off"
-                                name="meetingDate"
-                                onChange={updateMeetingBasicInfo}
-                                value={meetingBasic.meetingDate}
-                                placeholder="Meeting date" />
-                            </ClubMeetingDate>
-                            <ClubMeetingTheme>
-                                <Field
-                                type="text"
-                                autoComplete="off"
-                                name="meetingTheme"
-                                onChange={updateMeetingBasicInfo}
-                                value={meetingBasic.meetingTheme}
-                                placeholder="Meeting theme" />
-                            </ClubMeetingTheme>
                         </ClubName>
                         <div className="agendas-wrap">
-                            { meetingAgenda.map(agenda => 
-                                <AgendaItem className={`agenda ${tab === 'write' ? 'hover' : 'no-hover'}`} key={ agenda.id }>
-                                    <AgendaActionButtons>
-                                        { meetingAgenda.length > 1 && (
-                                                <span data-title="Remove" onClick={ (e) => removeAgenda(e, agenda.id) } className="action action-remove">
-                                                    <FontAwesomeIcon icon={faMinus} />
-                                                </span>
-                                        )}
-                                        <span data-title="Add" onClick={addNewAgenda} className="action action-add">
-                                            <FontAwesomeIcon icon={faPlus} />
-                                        </span>
-                                    </AgendaActionButtons>
-
-                                    <AgendaItemTitle>
-                                        <time className="agenda-time">
-                                            <Field type="text" name="startAt" autoComplete="off" onChange={(e) => updateMeetingAgenda(e, agenda.id)} placeholder="6:00" value={agenda.startAt} />
-                                        </time>
-                                        <AgendaTitle className="agenda-title">
-                                            <Field type="text" name="title" autoComplete="off" onChange={(e) => updateMeetingAgenda(e, agenda.id)} placeholder="Chair Calls Meeting to Order" value={agenda.title} />
-                                        </AgendaTitle>
-                                        <AgendaTM className="agenda-TM">
-                                            <Field type="text" name="toastmaster" autoComplete="off" onChange={(e) => updateMeetingAgenda(e, agenda.id)} placeholder="Toastmaster name" value={agenda.toastmaster} />
-                                        </AgendaTM>
-                                    </AgendaItemTitle>
-                                    <AgendaContent className="agenda-content">
-                                        <SimpleMDE
-                                            getMdeInstance= { getInstance }
-                                            id={ `details_${ agenda.id }` }
-                                            value={ agenda.details}
-                                            onChange={ (e) => updateMeetingAgenda(e, agenda.id) }
-                                            options={{ autoSave: false, autoFocus: true, spellChecker: false, status: false,
-                                                toolbar: [ 'bold', 'quote', 'table', '|', 'preview' ],
-                                                previewRender(content) {
-                                                    return ReactDOMServer.renderToString(
-                                                        <ReactMarkdown
-                                                        source={content}
-                                                        escapeHtml={ false }
-                                                        />
-                                                    );
-                                                }
-                                        }} />
-                                    </AgendaContent>
-                                </AgendaItem>
-                            )}
+                            <AgendaItem className="agenda">
+                                <AgendaContent className="agenda-content">
+                                    <ReactMarkdown>{content}</ReactMarkdown>
+                                </AgendaContent>
+                            </AgendaItem>
                         </div>
                     </AgendaList>
                     <AgendaSideBar>
-                        <div className="inWrap"> 
-                            <dl>
-                                <dt>President</dt>
-                                <dd>
-                                    <Field
-                                    type="text"
-                                    autoComplete="off"
-                                    name="president"
-                                    onChange={updateMeetingBasicInfo}
-                                    value={meetingBasic.president}
-                                    placeholder="Club President"/>
-                                </dd>
-
-                                <dt>VP Education</dt>
-                                <dd>
-                                    <Field
-                                    type="text"
-                                    autoComplete="off"
-                                    name="vPEducation"
-                                    onChange={updateMeetingBasicInfo}
-                                    value={meetingBasic.vPEducation}
-                                    placeholder="Club VP Education" />
-                                </dd>
-                                <dt>VP Membership</dt>
-                                <dd>
-                                    <Field
-                                    type="text"
-                                    autoComplete="off"
-                                    name="vPMembership"
-                                    onChange={updateMeetingBasicInfo}
-                                    value={meetingBasic.vPMembership}
-                                    placeholder="Club VP Membership" />
-                                </dd>
-                                
-                                <dt>VP Public Relations</dt>
-                                <dd>
-                                    <Field
-                                    type="text"
-                                    autoComplete="off"
-                                    name="vPRelation"
-                                    onChange={updateMeetingBasicInfo}
-                                    value={meetingBasic.vPRelation}
-                                    placeholder="Club VP Public Relations" />
-                                </dd>
-
-                                <dt>Secretary</dt>
-                                <dd>
-                                    <Field
-                                    type="text"
-                                    autoComplete="off"
-                                    name="secretary"
-                                    onChange={updateMeetingBasicInfo}
-                                    value={meetingBasic.secretary}
-                                    placeholder="Club Secretary" />
-                                </dd>
-
-                                <dt>Treasurer</dt>
-                                <dd>
-                                    <Field
-                                    type="text"
-                                    autoComplete="off"
-                                    name="treasurer"
-                                    onChange={updateMeetingBasicInfo}
-                                    value={meetingBasic.treasurer}
-                                    placeholder="Club Treasurer" />
-                                </dd>
-
-                                <dt>Sergeant at Arms</dt>
-                                <dd>
-                                    <Field
-                                    type="text"
-                                    autoComplete="off"
-                                    name="sergeant"
-                                    onChange={updateMeetingBasicInfo}
-                                    value={meetingBasic.sergeant}
-                                    placeholder="Club Sergeant at Arms" />
-                                </dd>
-                                {
-                                    meetingBasic.pastpresident && 
-                                    <React.Fragment>
-                                        <dt>Past President</dt>
-                                        <dd>
-                                            <Field
-                                            type="text"
-                                            autoComplete="off"
-                                            name="pastPresident"
-                                            onChange={updateMeetingBasicInfo}
-                                            value={meetingBasic.pastpresident}
-                                            placeholder="Past President" />
-                                        </dd>
-                                    </React.Fragment>
-                                }
-                            </dl>
-                            <p className="lead d-block">
-                                <Textarea
-                                name="meetingDetail"
-                                value={meetingBasic.meetingDetail}
-                                onChange={updateMeetingBasicInfo}
-                                placeholder="We meet every Wednesday from 6:00pm to 7:00pm at XYZ Restaurant, Kathmandu, Nepal."
-                                required />
-                            </p>
+                        <div className="inWrap">
                             <TMInternational>Toastmasters International <a rel="noopener" target="blank" href="https://www.toastmasters.org/">www.toastmasters.org</a></TMInternational>
-                            <p className="lead">
-                                <span className="d-block title-bold">Club Mission</span>
-                                <Textarea
-                                className="large"
-                                name="clubMission"
-                                value={meetingBasic.clubMission}
-                                onChange={updateMeetingBasicInfo}
-                                placeholder="We provide a supportive and positive learning experience in which members are empowered to develop communication and leadership skills, resulting in greater self-confidence and personal growth."
-                                required />
-                            </p>
                         </div>
-                    </AgendaSideBar> 
+                    </AgendaSideBar>
                     <Ballots>
                         <span>Better Table Topics Speaker</span>
                         <span>Better Featured Speaker</span>
@@ -400,11 +118,7 @@ function MeetingAgendaPreview ({ className }) {
 }
 
 MeetingAgendaPreview.propTypes = {
-  className: PropTypes.string,
-  club: PropTypes.object,
-  excom: PropTypes.object,
-  meeting: PropTypes.object,
-  agendas: PropTypes.array,
-}
+    className: PropTypes.string,
+};
 
-export default MeetingAgendaPreview
+export default MeetingAgendaPreview;
