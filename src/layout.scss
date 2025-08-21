@@ -530,8 +530,8 @@ blockquote {
     .title-bold, .agenda-time input,
     a:link, a:visited,
     [name='clubName'],
-    &[name='clubNumber'],
-    &[name='meetingTheme'] {
+    [name='clubNumber'],
+    [name='meetingTheme'] {
       border-color: #000 !important;
       color: #000 !important;
     }
