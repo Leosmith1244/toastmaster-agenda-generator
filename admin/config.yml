@@ -1,1 +1,16 @@
-1
+backend:
+  name: git-gateway
+  branch: master
+
+media_folder: public/img/uploads
+public_folder: /img/uploads
+
+collections:
+  - name: "agendas"
+    label: "Agendas"
+    folder: "src/agendas"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Agenda Title", name: "title", widget: "string"}
+      - {label: "Agenda Body", name: "body", widget: "markdown"}
